@@ -1,0 +1,1 @@
+{"order":1,"version":1,"index_patterns":["jobads-*"],"settings":{"number_of_shards":1,"number_of_replicas":0}}

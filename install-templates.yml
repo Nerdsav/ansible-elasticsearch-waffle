@@ -1,0 +1,58 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    elastic_auth_user: "john"
+    elastic_auth_password: "legend"
+    elastic_rest_api_url: "http://localhost:9200"
+    template_name: "jobads"
+
+  tasks:
+
+    - name: check if sensu vhost is present
+      uri:
+        url: "{{ elastic_rest_api_url }}/_cluster/health"
+        method: GET
+        user: "{{ elastic_auth_user }}"
+        password: "{{ elastic_auth_password }}"
+        force_basic_auth: no
+        status_code: 200,404
+        timeout: 10
+      register: request_ehost
+
+    - name: debug
+      debug:
+        var: request_ehost
+
+    - name: check if template is present
+      uri:
+        url: "{{ elastic_rest_api_url }}/_template/{{ template_name }}"
+        method: GET
+        user: "{{ elastic_auth_user }}"
+        password: "{{ elastic_auth_password }}"
+        force_basic_auth: no
+        status_code: 200,404
+        timeout: 10
+      register: request_template
+
+    - name: debug
+      debug:
+        var: request_template
+
+    - name: create template
+      uri:
+        url: "{{ elastic_rest_api_url }}/_template/{{ template_name }}"
+        method: PUT
+        HEADER_Content-Type: "application/json"
+        body: "{{ lookup('file','template.json') }}"
+        body_format: json
+        user: "{{ elastic_auth_user }}"
+        password: "{{ elastic_auth_password }}"
+        force_basic_auth: no
+        status_code: 200
+        timeout: 10
+      when:
+        - request_template.status == 404
